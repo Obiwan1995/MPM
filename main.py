@@ -23,8 +23,23 @@ def resolution_systeme_fusee(A, B, x0, ut, delta_t):
 	while i < n:
 		val = f(A, x, B, ut)
 		x = x + delta_t * val
+		tab_x.append([x[0,0], x[2,0]])
 		tab_x.append([changement_coord_x1(x[0,0], x[2,0], i, delta_t), x[1,0], changement_coord_x2(x[0,0], x[2,0], i, delta_t), x[3,0]])
 		i += 1
+	return x
+
+def resolution_systeme_fusee2(A, B, x0, ut, delta_t):
+	x=x0
+	x2=0
+	i=0
+	while i < n:
+		val = f(A, x, B, ut)
+		val2 = f(A, x2, B, ut)
+		x2=x+(delta_t/2)*val
+		x=x+delta_t*val2
+		#tab_x.append([x[0,0], x[2,0]])
+		tab_x.append([changement_coord_x1(x[0,0], x[2,0], i, delta_t), x[1,0], changement_coord_x2(x[0,0], x[2,0], i, delta_t), x[3,0]])
+		i+=1
 	return x
 
 def resolution_systeme_retrograde(A, xT, delta_t):
@@ -34,7 +49,21 @@ def resolution_systeme_retrograde(A, xT, delta_t):
 	while i < n:
 		val = g(A, p)
 		p = p - delta_t * val
-		t = t + delta_t
+		#t = t + delta_t
+		i += 1
+	return p
+
+def resolution_systeme_retrograde2(A, xT, delta_t):
+	t = 0
+	p = xT
+	p2 = 0
+	i = 0
+	while i < n:
+		val = g(A, p)
+		val2 = g(A,p2)
+		p2=p + (delta_t/2)*val
+		p = p - delta_t * val2
+		#t = t + delta_t
 		i += 1
 	return p
 
@@ -66,21 +95,31 @@ B = np.matrix([	[0,0],
 				[0,1]]);
 x = np.transpose(np.atleast_2d([1,0,0,0]))
 u = np.transpose(np.atleast_2d([0,0]))
-delta_t = 0.01
-n = 1000
+delta_t = 0.001
+n = T/delta_t
 epsilon = 0.00000001
-ro = 0.03
+ro = 0.01
 for i in range(0,50):
-	x = resolution_systeme_fusee(A, B, x, u, delta_t)
-	p = resolution_systeme_retrograde(A, x, delta_t)
+	x = resolution_systeme_fusee2(A, B, x, u, delta_t)
+	p = resolution_systeme_retrograde2(A, x, delta_t)
 	u = methode_gradient(epsilon, B, p, u, ro)
 
 x1 = []
 x2 = []
+y1 = []
+y2 = []
 for i in range(0, len(tab_x)):
-	x1.append(tab_x[i][0])
-	x2.append(tab_x[i][2])
-pyplot.plot(x1, x2)
+	x1.append(changement_coord_x1(tab_x[i][0], tab_x[i][1], i, delta_t))
+	x2.append(changement_coord_x2(tab_x[i][0], tab_x[i][1], i, delta_t))
+	#x1.append(tab_x[i][0])
+	#x2.append(tab_x[i][1])
+	y1.append(10**27*cos(omega*i*delta_t))
+	y2.append(10**27*sin(omega*i*delta_t))
+	
+pyplot.plot(x1, x2, "r")
+pyplot.plot(y1, y2, "b")
+pyplot.axis("equal")
+
 pyplot.show()
 
 # Euler explicite
